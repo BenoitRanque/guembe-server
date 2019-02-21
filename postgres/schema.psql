@@ -1,0 +1,292 @@
+-- TimeStamp functions
+-- This trigger function will set the created_at value on insert
+CREATE OR REPLACE FUNCTION set_created_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.created_at = now();
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+-- usage example
+-- CREATE TRIGGER auth_account_set_created_at BEFORE INSERT ON auth.account
+--     FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
+
+-- This trigger function will set the updated_at value if an update changes any values
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF row(NEW.*) IS DISTINCT FROM row(OLD.*) THEN
+        NEW.updated_at = now(); 
+        RETURN NEW;
+    ELSE
+        RETURN OLD;
+    END IF;
+END;
+$$ language 'plpgsql';
+
+-- uage example
+-- CREATE TRIGGER auth_account_set_updated_at BEFORE UPDATE ON auth.account
+--     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Password Hashing trigger Function
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE OR REPLACE FUNCTION hash_password()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.password IS NOT NULL THEN
+        NEW.password = crypt(NEW.password, gen_salt('bf'));
+    END IF;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+drop schema if exists auth cascade;
+create schema auth;
+
+create table auth.account (
+    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER auth_account_hash_password BEFORE INSERT OR UPDATE ON auth.account
+    FOR EACH ROW EXECUTE FUNCTION hash_password();
+
+CREATE TRIGGER auth_account_set_created_at BEFORE INSERT ON auth.account
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER auth_account_set_updated_at BEFORE UPDATE ON auth.account
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+
+create table auth.role (
+    role_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table auth.privilege (
+    account_id UUID REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    role_name TEXT REFERENCES auth.role (role_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    PRIMARY KEY (account_id, role_name)
+);
+
+insert into auth.role
+  (role_name, description)
+values
+  ('auth-administrator', 'Administrator role description'),
+  ('auth-user', 'Auth-User role description');
+insert into auth.account
+  (username, password)
+values
+  ('admin', 'admin'),
+  ('user', '');
+
+-- COMMENT ON TABLE auth.account IS 'Account Table used for auth';
+
+drop schema if exists support cascade;
+create schema support;
+
+create table support.area (
+    area_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table support.category (
+    category_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table support.status (
+    status_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table support.priority (
+    priority_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table support.tag (
+    tag_name TEXT PRIMARY KEY,
+    description TEXT
+);
+create table support.ticket (
+    ticket_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT,
+    body TEXT,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    area_name TEXT REFERENCES support.area (area_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    category_name TEXT NOT NULL REFERENCES support.category (category_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    status_name TEXT NOT NULL REFERENCES support.status (status_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    priority_name TEXT REFERENCES support.priority (priority_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER support_ticket_set_created_at BEFORE INSERT ON support.ticket
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_ticket_set_updated_at BEFORE UPDATE ON support.ticket
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+create table support.ticket_tag (
+    tag_name TEXT REFERENCES support.tag (tag_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    ticket_id UUID REFERENCES support.ticket (ticket_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    PRIMARY KEY (tag_name, ticket_id)
+);
+create table support.ticket_entry (
+    ticket_entry_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_id UUID NOT NULL REFERENCES support.ticket (ticket_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    body TEXT,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    area_name TEXT REFERENCES support.area (area_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    category_name TEXT REFERENCES support.category (category_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    status_name TEXT REFERENCES support.status (status_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    priority_name TEXT REFERENCES support.priority (priority_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER support_ticket_entry_set_created_at BEFORE INSERT ON support.ticket_entry
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_ticket_entry_updated_at BEFORE UPDATE ON support.ticket_entry
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- update ticket status, priority, category
+CREATE OR REPLACE FUNCTION ticket_entry_update_ticket()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF
+        NEW.status_name IS NOT NULL OR
+        NEW.priority_name IS NOT NULL OR
+        NEW.area_name IS NOT NULL OR
+        NEW.category_name IS NOT NULL
+    THEN
+        UPDATE support.ticket SET
+            status_name = COALESCE(NEW.status_name, status_name),
+            priority_name = COALESCE(NEW.priority_name, priority_name),
+            area_name = COALESCE(NEW.area_name, area_name),
+            category_name = COALESCE(NEW.category_name, category_name)
+        WHERE support.ticket.ticket_id = NEW.ticket_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER support_ticket_entry_update_ticket BEFORE INSERT ON support.ticket_entry
+    FOR EACH ROW EXECUTE FUNCTION ticket_entry_update_ticket();
+
+drop schema if exists bracelet cascade;
+create schema bracelet;
+
+CREATE TABLE bracelet.bracelet (
+    bracelet_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bracelet_name TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER bracelet_bracelet_set_created_at BEFORE INSERT ON bracelet.bracelet
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER bracelet_bracelet_updated_at BEFORE UPDATE ON bracelet.bracelet
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TABLE bracelet.checkpoint (
+    checkpoint_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    checkpoint_name TEXT UNIQUE NOT NULL,
+    description TEXT
+);
+CREATE TABLE bracelet.group (
+    group_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_name TEXT UNIQUE NOT NULL
+);
+CREATE TABLE bracelet.product (
+    product_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    checkpoint_id UUID NOT NULL REFERENCES bracelet.checkpoint (checkpoint_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+CREATE TABLE bracelet.activation (
+    activation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER bracelet_activation_set_created_at BEFORE INSERT ON bracelet.activation
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER bracelet_activation_updated_at BEFORE UPDATE ON bracelet.activation
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TABLE bracelet.bracelet_group (
+    bracelet_id UUID NOT NULL REFERENCES bracelet.bracelet (bracelet_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    group_id UUID NOT NULL REFERENCES bracelet.group (group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    PRIMARY KEY (bracelet_id, group_id)
+);
+CREATE TABLE bracelet.bracelet_activation (
+    bracelet_id UUID NOT NULL REFERENCES bracelet.bracelet (bracelet_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    activation_id UUID NOT NULL REFERENCES bracelet.activation (activation_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    PRIMARY KEY (bracelet_id, activation_id)
+);
+CREATE TABLE bracelet.activation_product (
+    activation_id UUID NOT NULL REFERENCES bracelet.activation (activation_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES bracelet.product (product_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    PRIMARY KEY (activation_id, product_id)
+);
+-- TODO
+-- RESTRICT CHECK CREATION BY FOLOWING CONDITIONS
+-- MUST BE ACTIVATED FOR PRODUCT WITH CHECKPOINT
+-- MUST NOT HAVE CHECKS BELONGINGS TO ANOTHER DATE
+CREATE TABLE bracelet.check (
+    check_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bracelet_id UUID NOT NULL REFERENCES bracelet.bracelet (bracelet_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    checkpoint_id UUID NOT NULL REFERENCES bracelet.checkpoint (checkpoint_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER bracelet_check_set_created_at BEFORE INSERT ON bracelet.check
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER bracelet_check_updated_at BEFORE UPDATE ON bracelet.check
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
