@@ -32,7 +32,7 @@ $$ language 'plpgsql';
 
 -- Password Hashing trigger Function
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE OR REPLACE FUNCTION hash_password()
+CREATE OR REPLACE FUNCTION auth.hash_password()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.password IS NOT NULL THEN
@@ -53,7 +53,7 @@ create table auth.account (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 CREATE TRIGGER auth_account_hash_password BEFORE INSERT OR UPDATE ON auth.account
-    FOR EACH ROW EXECUTE FUNCTION hash_password();
+    FOR EACH ROW EXECUTE FUNCTION auth.hash_password();
 
 CREATE TRIGGER auth_account_set_created_at BEFORE INSERT ON auth.account
     FOR EACH ROW EXECUTE FUNCTION set_created_at();
@@ -178,7 +178,7 @@ CREATE TRIGGER support_ticket_entry_updated_at BEFORE UPDATE ON support.ticket_e
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- update ticket status, priority, category
-CREATE OR REPLACE FUNCTION ticket_entry_update_ticket()
+CREATE OR REPLACE FUNCTION support.ticket_entry_update_ticket()
 RETURNS TRIGGER AS $$
 BEGIN
     IF
@@ -198,7 +198,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 CREATE TRIGGER support_ticket_entry_update_ticket BEFORE INSERT ON support.ticket_entry
-    FOR EACH ROW EXECUTE FUNCTION ticket_entry_update_ticket();
+    FOR EACH ROW EXECUTE FUNCTION support.ticket_entry_update_ticket();
 
 drop schema if exists bracelet cascade;
 create schema bracelet;
