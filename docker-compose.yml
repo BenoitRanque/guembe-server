@@ -34,5 +34,32 @@ services:
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://${PG_USERNAME}:${PG_PASSWORD}@postgres:5432/${PG_DATABASE}
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "false"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET}
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      # HASURA_GRAPHQL_JWT_SECRET: |
+      #   {
+      #     "type": "HS256",
+      #     "key": "${AUTH_JWT_SECRET}",
+      #     "claims_namespace": "http://app.guembe.ti/jwt/claims",
+      #     "claims_format": "json"
+      #   }
+  business-logic:
+    image: business-logic:prod
+    build:
+      context: ./business-logic
+      args:
+        NODE_ENV: production
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGUSER: ${PG_USERNAME}
+      PGDATABASE: ${PG_DATABASE}
+      PGPASSWORD: ${PG_PASSWORD}
+      PGPORT: 5432
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+    depends_on:
+      - postgres

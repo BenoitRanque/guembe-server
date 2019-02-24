@@ -6,8 +6,16 @@ services:
     # expose ports on host machine, only in development
     ports:
       - "5432:5432"
-  graphql-engine:
+  business-logic:
+    image: business-logic:dev
+    build:
+      args:
+        NODE_ENV: development
+    command: nodemon -L src/index.js
     environment:
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      NODE_ENV: development
+    volumes:
+      - ./business-logic:/usr/app
+      - /usr/app/node_modules
 volumes:
   pgdata:
