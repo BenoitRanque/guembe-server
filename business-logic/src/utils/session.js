@@ -17,11 +17,30 @@ function requireSession (ctx) {
   if (ctx.session === null) throw new Error ('Authentication Required!')
 }
 
+function getRoles(ctx) {
+  requireSession(ctx)
+
+  return ctx.session['x-hasura']['x-hasura-allowed-roles']
+}
+
+function getAccountId(ctx) {
+  requireSession(ctx)
+
+  return ctx.session['x-hasura']['x-hasura-account-id']
+}
+
+function getUsername(ctx) {
+  requireSession(ctx)
+
+  return ctx.session['x-hasura']['x-hasura-username']
+}
+
 function requireRole (roles, ctx) {
   // throw error if current session does not have at least onf of the roles specified
-  this.requireSession(ctx)
+  requireSession(ctx)
+  const sessionRoles = getRoles(ctx)
 
-  if ((Array.isArray(roles) && roles.some(role => ctx.session.roles.includes(role))) || ctx.session.roles.includes(roles)) {
+  if ((Array.isArray(roles) && roles.some(role => sessionRoles.includes(role))) || sessionRoles.includes(roles)) {
     return true
   }
   throw new Error ('Authorization Required!')
@@ -29,6 +48,9 @@ function requireRole (roles, ctx) {
 
 module.exports = {
   getSession,
+  getAccountId,
+  getRoles,
+  getUsername,
   requireSession,
   requireRole
 }
