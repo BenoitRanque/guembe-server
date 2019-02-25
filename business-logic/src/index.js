@@ -14,17 +14,12 @@ const typeDefs = gql`
   }
 
   type CredentialsAccount {
-    user_id: UUID!
+    account_id: UUID!
     username: String!
-    roles: [CredentialsRole!]!
-  }
-
-  type CredentialsRole {
-    role_name: String
+    roles: [String!]!
   }
 
   type Query {
-    announcement: String
     credentials (username: String! password: String!): Credentials!
   }
 `
@@ -32,23 +27,30 @@ const typeDefs = gql`
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    announcement: () =>
-      `Say hello to the new Apollo Server! A production ready GraphQL server with an incredible getting started experience.`,
     credentials: async (root, { username, password }, { db }) => {
       const { rows: [ account ] } = await db.query(`SELECT account_id, username, password FROM auth.account WHERE username = $1`, [ username ])
 
       if (account) {
         const valid = await bcrypt.compare(password, account.password)
         if (valid) {
+          const { account_id } = account
+          const { rows: roleRows } = await db.query(`SELECT role_name AS role FROM auth.account_role WHERE account_id = $1`, [account_id])
 
-          // TODO build propper JWT per hasura spec
+          const roles = roleRows.length ? roles.map(({ role }) => role) : ['anonymous'] // default to anonymous role
           const credentials = {
             username,
-            account_id: account.account_id
+            account_id: account_id,
+            roles
+          }
+          const claims = {
+            'x-hasura-default-role': roles[0], // default to first role
+            'x-hasura-alowed-roles': roles,
+            'x-hasura-account-id': account_id,
+            'x-hasura-username': username
           }
           return {
-            credentials,
-            token: jwt.sign({ credentials }, process.env.AUTH_JWT_SECRET)
+            account: credentials,
+            token: jwt.sign({ 'x-hasura': claims }, process.env.AUTH_JWT_SECRET)
           }
         }
       }
@@ -60,6 +62,8 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  playground: process.env.NODE_ENV !== 'production',
+  debug: process.env.NODE_ENV !== 'production',
   context: ({ req }) => ({
     request: req,
     session: getSession(req),
@@ -67,6 +71,6 @@ const server = new ApolloServer({
   })
 })
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+server.listen(3000).then(({ url }) => {
+  console.log(`Server ready at ${url}`);
 });

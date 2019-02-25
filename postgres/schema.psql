@@ -66,7 +66,7 @@ create table auth.role (
     role_name TEXT PRIMARY KEY,
     description TEXT
 );
-create table auth.privilege (
+create table auth.account_role (
     account_id UUID REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
