@@ -76,16 +76,22 @@ create table auth.account_role (
     PRIMARY KEY (account_id, role_name)
 );
 
-insert into auth.role
+INSERT INTO auth.role
   (role_name, description)
-values
-  ('auth-administrator', 'Administrator role description'),
-  ('auth-user', 'Auth-User role description');
-insert into auth.account
-  (username, password)
-values
-  ('admin', 'admin'),
-  ('user', '');
+VALUES
+  ('admin', 'Administrator role description');
+
+WITH administrator_account AS (
+    INSERT INTO auth.account
+    (username, password)
+    VALUES
+    ('admin', 'admin')
+    RETURNING account_id
+)
+INSERT INTO auth.account_role
+    (account_id, role_name)
+VALUES
+    (administrator_account.account_id, 'admin');
 
 -- COMMENT ON TABLE auth.account IS 'Account Table used for auth';
 
