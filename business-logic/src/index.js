@@ -36,7 +36,7 @@ const resolvers = {
           const { account_id } = account
           const { rows: roleRows } = await db.query(`SELECT role_name AS role FROM auth.account_role WHERE account_id = $1`, [account_id])
 
-          const roles = roleRows.length ? roles.map(({ role }) => role) : ['anonymous'] // default to anonymous role
+          const roles = roleRows.length ? roleRows.map(({ role }) => role) : ['anonymous'] // default to anonymous role
           const credentials = {
             username,
             account_id: account_id,
@@ -44,7 +44,7 @@ const resolvers = {
           }
           const claims = {
             'x-hasura-default-role': roles[0], // default to first role
-            'x-hasura-alowed-roles': roles,
+            'x-hasura-allowed-roles': roles,
             'x-hasura-account-id': account_id,
             'x-hasura-username': username
           }
