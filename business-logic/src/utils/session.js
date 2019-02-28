@@ -1,5 +1,4 @@
-
-
+const jwt = require('jsonwebtoken')
 
 function getSession (request) {
   // get session from header
