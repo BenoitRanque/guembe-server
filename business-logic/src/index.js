@@ -20,14 +20,14 @@ const typeDefs = gql`
   }
 
   type Query {
-    credentials (username: String! password: String!): Credentials!
+    auth_credentials (username: String! password: String!): Credentials!
   }
 `
 
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    credentials: async (root, { username, password }, { db }) => {
+    auth_credentials: async (root, { username, password }, { db }) => {
       const { rows: [ account ] } = await db.query(`SELECT account_id, username, password FROM auth.account WHERE username = $1`, [ username ])
 
       if (account) {
