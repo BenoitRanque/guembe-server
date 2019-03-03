@@ -1,5 +1,5 @@
 # server
-Monolithic multi application server
+Multi application server monorepo
 
 Example `.env` file:
 
