@@ -90,8 +90,7 @@ WITH administrator_account AS (
 )
 INSERT INTO auth.account_role
     (account_id, role_name)
-VALUES
-    (administrator_account.account_id, 'admin');
+SELECT account_id, 'admin' FROM administrator_account;
 
 -- COMMENT ON TABLE auth.account IS 'Account Table used for auth';
 
