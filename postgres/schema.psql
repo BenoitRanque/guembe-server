@@ -376,9 +376,14 @@ END;
 $$ language 'plpgsql';
 CREATE TRIGGER admittance_verify_activation_validation BEFORE INSERT ON admittance.activation
     FOR EACH ROW EXECUTE FUNCTION admittance.activation_validation();
+
 -- DO $$
 -- BEGIN
---     FOR counter IN 1..500 LOOP
---         INSERT INTO admittance.bracelet (series, serial) VALUES ('110', counter);
---     END LOOP;
+
+-- code here
+
+    -- FOR counter IN 1..2000 LOOP
+    --     INSERT INTO admittance.bracelet (series_name, serial) VALUES ('12', counter);
+    -- END LOOP;
+
 -- END; $$
