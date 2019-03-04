@@ -26,7 +26,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
   graphql-engine:
-    image: hasura/graphql-engine:v1.0.0-alpha38
+    image: hasura/graphql-engine:v1.0.0-alpha39
     ports:
     - "4000:8080"
     depends_on:
