@@ -4,8 +4,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
     # expose ports on host machine, only in development
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
   business-logic:
     image: business-logic:dev
     build:
