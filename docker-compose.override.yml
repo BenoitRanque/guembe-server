@@ -2,10 +2,10 @@ version: '3.6'
 services:
   postgres:
     volumes:
-      - pgdata:/var/lib/postgresql/data/pgdata
-    # expose ports on host machine, only in development
-    # ports:
-    #   - "5432:5432"
+      - ./docker/postgres:/var/lib/postgresql
+  pgadmin:
+    volumes:
+      - ./docker/pgadmin:/var/lib/pgadmin
   business-logic:
     image: business-logic:dev
     build:
@@ -17,5 +17,6 @@ services:
     volumes:
       - ./business-logic:/usr/app
       - /usr/app/node_modules
-volumes:
-  pgdata:
+# volumes:
+#   postgres:
+#   pgadmin:

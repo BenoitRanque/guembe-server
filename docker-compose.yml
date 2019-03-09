@@ -14,9 +14,9 @@ services:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./data:/var/lib/postgresql/data/pgdata
+      - ./postgres:/var/lib/postgresql/data/pgdata
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:4.3
     restart: always
     depends_on:
     - postgres
@@ -25,6 +25,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
   graphql-engine:
     image: hasura/graphql-engine:v1.0.0-alpha39
     ports:
