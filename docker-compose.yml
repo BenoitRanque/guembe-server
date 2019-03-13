@@ -14,14 +14,14 @@ services:
       POSTGRES_PASSWORD: ${PG_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./postgres:/var/lib/postgresql/data/pgdata
+      - ./postgres:/var/lib/postgresql/data
   pgadmin:
     image: dpage/pgadmin4:4.3
     restart: always
     depends_on:
-    - postgres
+      - postgres
     ports:
-    - "5050:80"
+      - "5050:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
@@ -30,9 +30,9 @@ services:
   graphql-engine:
     image: hasura/graphql-engine:v1.0.0-alpha39
     ports:
-    - "4000:8080"
+      - "4000:8080"
     depends_on:
-    - "postgres"
+      - "postgres"
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://${PG_USERNAME}:${PG_PASSWORD}@postgres:5432/${PG_DATABASE}
