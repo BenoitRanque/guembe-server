@@ -46,7 +46,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-create table auth.account (
+CREATE TABLE auth.account (
     account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
@@ -62,11 +62,11 @@ CREATE TRIGGER auth_account_set_updated_at BEFORE UPDATE ON auth.account
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 
-create table auth.role (
+CREATE TABLE auth.role (
     role_name TEXT PRIMARY KEY,
     description TEXT
 );
-create table auth.account_role (
+CREATE TABLE auth.account_role (
     account_id UUID REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
@@ -76,64 +76,96 @@ create table auth.account_role (
     PRIMARY KEY (account_id, role_name)
 );
 
-INSERT INTO auth.role
-  (role_name, description)
-VALUES
-  ('admin', 'Administrator role description');
 
 WITH administrator_account AS (
     INSERT INTO auth.account
-    (username, password)
+        (username, password)
     VALUES
-    ('admin', 'admin')
+        ('admin', 'admin')
     RETURNING account_id
+), auth_roles AS (
+    INSERT INTO auth.role
+        (role_name, description)
+    VALUES
+        ('admin', 'Usuario administrador maximo. No utilizar en productivo'),
+        ('support-client', 'Usuario de sopport. Puede crear tickets, ver y responder a tickets creados por si mismo, y cerrar o reabrir dichos tickets'),
+        ('support-technician', 'Usuario de sopporte. Puede ver, editar, responder, y cerrar todos los tickets. Recibe notificacion cuando se le asigna un ticket.'),
+        ('support-manager', 'Usuario de sopporte. Puede asignar tickets a usuarios.'),
+        ('support-supervisor', 'Usuario de sopporte. Puede leer todos los tickets.')
+    RETURNING role_name
 )
 INSERT INTO auth.account_role
     (account_id, role_name)
-SELECT account_id, 'admin' FROM administrator_account;
+SELECT
+    account_id, role_name
+FROM administrator_account CROSS JOIN auth_roles;
 
 -- COMMENT ON TABLE auth.account IS 'Account Table used for auth';
 
 drop schema if exists support cascade;
 create schema support;
 
-create table support.area (
-    area_name TEXT PRIMARY KEY,
-    description TEXT
-);
-create table support.category (
-    category_name TEXT PRIMARY KEY,
-    description TEXT
-);
-create table support.status (
+CREATE TABLE support.status (
     status_name TEXT PRIMARY KEY,
     description TEXT
 );
-create table support.priority (
+
+INSERT INTO support.status
+    (status_name, description)
+VALUES
+    ('OPEN', 'Abierto'),
+    ('CLOSED', 'Cerrado'),
+    ('PENDING', 'Pendiente');
+
+CREATE TABLE support.priority (
     priority_name TEXT PRIMARY KEY,
     description TEXT
 );
-create table support.tag (
+
+INSERT INTO support.priority
+    (priority_name, description)
+VALUES
+    ('HIGH', 'Alta'),
+    ('MEDIUM', 'Media'),
+    ('LOW', 'Baja');
+
+CREATE TABLE support.tag (
     tag_name TEXT PRIMARY KEY,
     description TEXT
 );
-create table support.ticket (
+
+INSERT INTO support.tag
+    (tag_name, description)
+VALUES
+    ('Impresora', 'Problemas de impresoras'),
+    ('SAP', 'Problemas de SAP'),
+    ('RetailOne', 'Problemas de Retail One'),
+    ('Hotel', 'Area Hotelera'),
+    ('Contabilidad', 'Area Contable'),
+    ('Restaurante', 'Area Restaurante'),
+    ('Comercial', 'Area Comercial');
+
+CREATE TABLE support.account_default_tag (
+    account_id UUID REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    tag_name TEXT REFERENCES support.tag (tag_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    PRIMARY KEY (account_id, tag_name)
+);
+
+CREATE TABLE support.ticket (
     ticket_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT,
     body TEXT,
+    status_name TEXT DEFAULT 'OPEN' NOT NULL REFERENCES support.status (status_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    priority_name TEXT DEFAULT 'MEDIUM' NOT NULL REFERENCES support.priority (priority_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
     owner_id UUID NOT NULL REFERENCES auth.account (account_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    area_name TEXT REFERENCES support.area (area_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    category_name TEXT NOT NULL REFERENCES support.category (category_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    status_name TEXT NOT NULL REFERENCES support.status (status_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    priority_name TEXT REFERENCES support.priority (priority_name)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -144,16 +176,17 @@ CREATE TRIGGER support_ticket_set_created_at BEFORE INSERT ON support.ticket
 CREATE TRIGGER support_ticket_set_updated_at BEFORE UPDATE ON support.ticket
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-create table support.ticket_tag (
-    tag_name TEXT REFERENCES support.tag (tag_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+CREATE TABLE support.ticket_tag (
     ticket_id UUID REFERENCES support.ticket (ticket_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
-    PRIMARY KEY (tag_name, ticket_id)
+    tag_name TEXT REFERENCES support.tag (tag_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    PRIMARY KEY (ticket_id, tag_name)
 );
-create table support.ticket_entry (
+
+CREATE TABLE support.ticket_entry (
     ticket_entry_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id UUID NOT NULL REFERENCES support.ticket (ticket_id)
         ON UPDATE CASCADE
@@ -162,49 +195,182 @@ create table support.ticket_entry (
     owner_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    area_name TEXT REFERENCES support.area (area_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    category_name TEXT REFERENCES support.category (category_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    status_name TEXT REFERENCES support.status (status_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-    priority_name TEXT REFERENCES support.priority (priority_name)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-
 CREATE TRIGGER support_ticket_entry_set_created_at BEFORE INSERT ON support.ticket_entry
     FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER support_ticket_entry_set_updated_at BEFORE UPDATE ON support.ticket_entry
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- update ticket status, priority, category
-CREATE OR REPLACE FUNCTION support.ticket_entry_update_ticket()
+CREATE TABLE support.ticket_status (
+    ticket_status_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_id UUID NOT NULL REFERENCES support.ticket (ticket_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    status_name TEXT REFERENCES support.status (status_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER support_ticket_status_set_created_at BEFORE INSERT ON support.ticket_status
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_ticket_status_set_updated_at BEFORE UPDATE ON support.ticket_status
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+-- update ticket status
+CREATE OR REPLACE FUNCTION support.ticket_status_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF
-        NEW.status_name IS NOT NULL OR
-        NEW.priority_name IS NOT NULL OR
-        NEW.area_name IS NOT NULL OR
-        NEW.category_name IS NOT NULL
-    THEN
-        UPDATE support.ticket SET
-            status_name = COALESCE(NEW.status_name, status_name),
-            priority_name = COALESCE(NEW.priority_name, priority_name),
-            area_name = COALESCE(NEW.area_name, area_name),
-            category_name = COALESCE(NEW.category_name, category_name)
-        WHERE support.ticket.ticket_id = NEW.ticket_id;
-    END IF;
+    UPDATE support.ticket
+    SET status_name = NEW.status_name
+    WHERE support.ticket.ticket_id = NEW.ticket_id;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER support_ticket_entry_update_ticket BEFORE INSERT ON support.ticket_entry
-    FOR EACH ROW EXECUTE FUNCTION support.ticket_entry_update_ticket();
+CREATE TRIGGER support_ticket_status_update BEFORE INSERT ON support.ticket_status
+    FOR EACH ROW EXECUTE FUNCTION support.ticket_status_update();
+
+CREATE TABLE support.ticket_priority (
+    ticket_priority_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_id UUID NOT NULL REFERENCES support.ticket (ticket_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    priority_name TEXT NOT NULL REFERENCES support.priority (priority_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER support_ticket_priority_set_created_at BEFORE INSERT ON support.ticket_priority
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_ticket_priority_set_updated_at BEFORE UPDATE ON support.ticket_priority
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+-- update ticket priority
+CREATE OR REPLACE FUNCTION support.ticket_priority_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE support.ticket
+    SET priority_name = NEW.priority_name
+    WHERE support.ticket.ticket_id = NEW.ticket_id;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER support_ticket_priority_update BEFORE INSERT ON support.ticket_priority
+    FOR EACH ROW EXECUTE FUNCTION support.ticket_priority_update();
+
+CREATE TABLE support.ticket_assignation (
+    ticket_assignation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_id UUID NOT NULL REFERENCES support.ticket (ticket_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    assignee_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER support_ticket_assignation_set_created_at BEFORE INSERT ON support.ticket_assignation
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_ticket_assignation_set_updated_at BEFORE UPDATE ON support.ticket_assignation
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE VIEW support.ticket_thread AS
+SELECT
+    COALESCE(support.ticket_entry.ticket_id, support.ticket_status.ticket_id, support.ticket_priority.ticket_id, support.ticket_assignation.ticket_id) as ticket_id,
+    COALESCE(support.ticket_entry.owner_id, support.ticket_status.owner_id, support.ticket_priority.owner_id, support.ticket_assignation.owner_id) as owner_id,
+    COALESCE(support.ticket_entry.created_at, support.ticket_status.created_at, support.ticket_priority.created_at, support.ticket_assignation.created_at) as created_at,
+    COALESCE(support.ticket_entry.updated_at, support.ticket_status.updated_at, support.ticket_priority.updated_at, support.ticket_assignation.updated_at) as updated_at,
+    support.ticket_entry.ticket_entry_id,
+    support.ticket_entry.body,
+    support.ticket_status.ticket_status_id,
+    support.ticket_status.status_name,
+    support.ticket_priority.ticket_priority_id,
+    support.ticket_priority.priority_name,
+    support.ticket_assignation.ticket_assignation_id,
+    support.ticket_assignation.assignee_id
+FROM support.ticket_entry
+CROSS JOIN support.ticket_status
+CROSS JOIN support.ticket_priority
+CROSS JOIN support.ticket_assignation;
+-- (SELECT
+--     ticket_id,
+--     owner_id,
+--     created_at,
+--     updated_at,
+--     ticket_entry_id,
+--     body,
+--     null as ticket_status_id,
+--     null as status_name,
+--     null as ticket_priority_id,
+--     null as priority_name,
+--     null as ticket_assignation_id,
+--     null as assignee_id
+-- FROM support.ticket_entry)
+-- UNION ALL
+-- (SELECT
+--     ticket_id,
+--     owner_id,
+--     created_at,
+--     updated_at,
+--     null as ticket_entry_id,
+--     null as body,
+--     null as ticket_status_id,
+--     null as status_name,
+--     null as ticket_priority_id,
+--     null as priority_name,
+--     null as ticket_assignation_id,
+--     null as assignee_id
+-- FROM support.ticket_status)
+-- UNION ALL
+-- (SELECT
+--     ticket_id,
+--     owner_id,
+--     created_at,
+--     updated_at,
+--     null as ticket_entry_id,
+--     null as body,
+--     null as ticket_status_id,
+--     null as status_name,
+--     null as ticket_priority_id,
+--     null as priority_name,
+--     null as ticket_assignation_id,
+--     null as assignee_id
+-- FROM support.ticket_priority)
+-- UNION ALL
+-- (SELECT
+--     ticket_id,
+--     owner_id,
+--     created_at,
+--     updated_at,
+--     null as ticket_entry_id,
+--     null as body,
+--     null as ticket_status_id,
+--     null as status_name,
+--     null as ticket_priority_id,
+--     null as priority_name,
+--     null as ticket_assignation_id,
+--     null as assignee_id
+-- FROM support.ticket_assignation)
+-- ORDER BY created_at ASC;
+-- CREATE VIEW support.ticket_thread AS
+-- (SELECT ticket_id, ticket_entry_id, null, null, null, body, null, null, null, owner_id, created_at, updated_at FROM support.ticket_entry)
+-- UNION ALL
+-- (SELECT ticket_id, null, ticket_status_id, null, null, null, status_name, null, null, owner_id, created_at, updated_at FROM support.ticket_status)
+-- UNION ALL
+-- (SELECT ticket_id, null, null, ticket_priority_id, null, null, null, priority_name, null, owner_id, created_at, updated_at FROM support.ticket_priority)
+-- UNION ALL
+-- (SELECT ticket_id, null, null, null, ticket_assignation_id, null, null, null, assignee_id, owner_id, created_at, updated_at FROM support.ticket_assignation)
+-- ORDER BY created_at ASC;
 
 drop schema if exists admittance cascade;
 create schema admittance;
