@@ -1,13 +1,17 @@
 const express = require('express')
+const { sessionMiddleware } = require('./utils/session')
 
 const app = express()
 const port = 3000
 
-const apollo = require('./apollo')
-apollo.applyMiddleware({ app, path: '/graphql' })
+app.use((req, res, next) => {
+  console.log('request made')
+  next()
+})
 
-const upload = require('./upload')
-app.use('/upload', upload)
+app.use(sessionMiddleware)
+app.use('/graphql', require('./graphql'))
+app.use('/upload', require('./upload'))
 
 app.listen({ port }, () => {
   console.log(`Listening on port ${port}`);

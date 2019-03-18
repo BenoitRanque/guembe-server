@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken')
 
-function getSession (request) {
+function sessionMiddleware (req, res, next) {
   // get session from header
-  const Authorization = request.get('Authorization')
+  const Authorization = req.get('Authorization')
   if (Authorization) {
     const token = Authorization.replace('Bearer ', '')
     const session = jwt.verify(token, process.env.AUTH_JWT_SECRET)
-    return session
+    req.session = session
   }
-  return null
+  next()
 }
 
 function requireSession (ctx) {
@@ -46,7 +46,7 @@ function requireRole (roles, ctx) {
 }
 
 module.exports = {
-  getSession,
+  sessionMiddleware,
   getAccountId,
   getRoles,
   getUsername,
