@@ -12,7 +12,7 @@ app.use(graphqlHTTP(request => ({
   schema,
   rootValue,
   graphiql: true,
-  context: { request, db }
+  context: request
 })))
 
 module.exports = app

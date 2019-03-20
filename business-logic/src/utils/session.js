@@ -11,38 +11,57 @@ function sessionMiddleware (req, res, next) {
   next()
 }
 
-function requireSession (ctx) {
+function requireSession (req) {
   // throw error if no session is found
-  if (ctx.session === null) throw new Error ('Authentication Required!')
+  if (req.session === null) throw new Error ('Authentication Required!')
 }
 
-function getRoles(ctx) {
-  requireSession(ctx)
+function getRoles(req) {
+  requireSession(req)
 
-  return ctx.session['x-hasura']['x-hasura-allowed-roles']
+  return req.session['x-hasura']['x-hasura-allowed-roles']
 }
 
-function getAccountId(ctx) {
-  requireSession(ctx)
+function getAccountId(req) {
+  requireSession(req)
 
-  return ctx.session['x-hasura']['x-hasura-account-id']
+  return req.session['x-hasura']['x-hasura-account-id']
 }
 
-function getUsername(ctx) {
-  requireSession(ctx)
+function getUsername(req) {
+  requireSession(req)
 
-  return ctx.session['x-hasura']['x-hasura-username']
+  return req.session['x-hasura']['x-hasura-username']
 }
 
-function requireRole (roles, ctx) {
-  // throw error if current session does not have at least onf of the roles specified
-  requireSession(ctx)
-  const sessionRoles = getRoles(ctx)
+function requireRole (roles, req) {
+  // throw error if current session does not have at least of of the roles specified
+  requireSession(req)
+  const sessionRoles = getRoles(req)
 
   if ((Array.isArray(roles) && roles.some(role => sessionRoles.includes(role))) || sessionRoles.includes(roles)) {
     return true
   }
   throw new Error ('Authorization Required!')
+}
+
+function requireSessionMiddleware (req, res, next) {
+  if (req.session) {
+    return next()
+  }
+  res.status(401).end()
+}
+
+function requireRoleMiddleware (roles) {
+  return (req, res, next) => {
+    requireSession(req)
+    const sessionRoles = getRoles(req)
+
+    if (Array.isArray(roles) ? roles.some(role => sessionRoles.includes(role)) : sessionRoles.includes(roles)) {
+      return next()
+    }
+    res.status(403).end()
+  }
 }
 
 module.exports = {
@@ -51,5 +70,7 @@ module.exports = {
   getRoles,
   getUsername,
   requireSession,
-  requireRole
+  requireRole,
+  requireSessionMiddleware,
+  requireRoleMiddleware
 }

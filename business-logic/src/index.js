@@ -1,5 +1,8 @@
 const express = require('express')
 const { sessionMiddleware } = require('./utils/session')
+const db = require('./utils/db')
+
+express.request.prototype.db = db
 
 const app = express()
 const port = 3000
