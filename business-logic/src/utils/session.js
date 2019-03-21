@@ -2,11 +2,15 @@ const jwt = require('jsonwebtoken')
 
 function sessionMiddleware (req, res, next) {
   // get session from header
+  console.log('verifying session...')
+  let token = null
+
   const Authorization = req.get('Authorization')
   if (Authorization) {
     const token = Authorization.replace('Bearer ', '')
     const session = jwt.verify(token, process.env.AUTH_JWT_SECRET)
     req.session = session
+    console.log('session verified...')
   }
   next()
 }

@@ -284,24 +284,41 @@ CREATE TRIGGER support_ticket_assignation_set_created_at BEFORE INSERT ON suppor
 CREATE TRIGGER support_ticket_assignation_set_updated_at BEFORE UPDATE ON support.ticket_assignation
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE VIEW support.ticket_thread AS
-SELECT
-    COALESCE(support.ticket_entry.ticket_id, support.ticket_status.ticket_id, support.ticket_priority.ticket_id, support.ticket_assignation.ticket_id) as ticket_id,
-    COALESCE(support.ticket_entry.owner_id, support.ticket_status.owner_id, support.ticket_priority.owner_id, support.ticket_assignation.owner_id) as owner_id,
-    COALESCE(support.ticket_entry.created_at, support.ticket_status.created_at, support.ticket_priority.created_at, support.ticket_assignation.created_at) as created_at,
-    COALESCE(support.ticket_entry.updated_at, support.ticket_status.updated_at, support.ticket_priority.updated_at, support.ticket_assignation.updated_at) as updated_at,
-    support.ticket_entry.ticket_entry_id,
-    support.ticket_entry.body,
-    support.ticket_status.ticket_status_id,
-    support.ticket_status.status_name,
-    support.ticket_priority.ticket_priority_id,
-    support.ticket_priority.priority_name,
-    support.ticket_assignation.ticket_assignation_id,
-    support.ticket_assignation.assignee_id
-FROM support.ticket_entry
-CROSS JOIN support.ticket_status
-CROSS JOIN support.ticket_priority
-CROSS JOIN support.ticket_assignation;
+CREATE TABLE support.file (
+    file_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    path TEXT NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT NOT null,
+    size BIGINT NOT NULL,
+    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER support_file_set_created_at BEFORE INSERT ON support.file
+    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+CREATE TRIGGER support_file_set_updated_at BEFORE UPDATE ON support.file
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- CREATE VIEW support.ticket_thread AS
+-- SELECT
+--     COALESCE(support.ticket_entry.ticket_id, support.ticket_status.ticket_id, support.ticket_priority.ticket_id, support.ticket_assignation.ticket_id) as ticket_id,
+--     COALESCE(support.ticket_entry.owner_id, support.ticket_status.owner_id, support.ticket_priority.owner_id, support.ticket_assignation.owner_id) as owner_id,
+--     COALESCE(support.ticket_entry.created_at, support.ticket_status.created_at, support.ticket_priority.created_at, support.ticket_assignation.created_at) as created_at,
+--     COALESCE(support.ticket_entry.updated_at, support.ticket_status.updated_at, support.ticket_priority.updated_at, support.ticket_assignation.updated_at) as updated_at,
+--     support.ticket_entry.ticket_entry_id,
+--     support.ticket_entry.body,
+--     support.ticket_status.ticket_status_id,
+--     support.ticket_status.status_name,
+--     support.ticket_priority.ticket_priority_id,
+--     support.ticket_priority.priority_name,
+--     support.ticket_assignation.ticket_assignation_id,
+--     support.ticket_assignation.assignee_id
+-- FROM support.ticket_entry
+-- CROSS JOIN support.ticket_status
+-- CROSS JOIN support.ticket_priority
+-- CROSS JOIN support.ticket_assignation;
 -- (SELECT
 --     ticket_id,
 --     owner_id,
