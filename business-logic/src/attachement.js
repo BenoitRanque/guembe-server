@@ -5,7 +5,7 @@ const fs = require('fs')
 const corser = require('corser')
 const uuid = require('uuid/v4')
 const throttle = require('express-throttle-bandwidth')
-const { requireSessionMiddleware, requireRoleMiddleware, getAccountId, getRoles} = require('../utils/session')
+const { requireSessionMiddleware, requireRoleMiddleware, getAccountId, getRoles} = require('./utils/session')
 
 const app = express()
 

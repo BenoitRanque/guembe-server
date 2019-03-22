@@ -9,7 +9,7 @@ const port = 3000
 
 app.use(sessionMiddleware)
 app.use('/graphql', require('./graphql'))
-app.use('/upload', require('./upload'))
+app.use('/attachement', require('./attachement'))
 
 app.listen({ port }, () => {
   console.log(`Listening on port ${port}`);
