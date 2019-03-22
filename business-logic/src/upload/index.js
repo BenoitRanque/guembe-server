@@ -14,18 +14,17 @@ const FILE_OWNER_ROLES = ['admin']
 // roles that can read or write any file
 const FILE_ADMIN_ROLES = ['admin']
 
-
 app.use(corser.create({
   requestHeaders: corser.simpleRequestHeaders.concat(['Authorization'])
 }))
 
-app.use((req, res, next) => {
-  console.log('hi')
-  next()
-})
+app.use(requireSessionMiddleware)
+
+app.use(requireRoleMiddleware([...FILE_OWNER_ROLES, ...FILE_ADMIN_ROLES]))
+
 app.use(throttle(1024 * 128)) // throttling bandwidth
 
-app.post('/', requireSessionMiddleware, requireRoleMiddleware([...FILE_OWNER_ROLES, ...FILE_ADMIN_ROLES]), (req, res) => {
+app.post('/', (req, res) => {
   const owner_id = getAccountId(req)
   const form = new formidable.IncomingForm()
   const folder = '/usr/app/files'
@@ -66,18 +65,18 @@ app.post('/', requireSessionMiddleware, requireRoleMiddleware([...FILE_OWNER_ROL
       }
       // map files to promise array
       const result = await Promise.all(Object.values(files).map(async file => {
-        const file_id = uuid()
-        const path = `${form.uploadDir}/${file_id}`
+        const attachement_id = uuid()
+        const path = `${form.uploadDir}/${attachement_id}`
 
         fs.renameSync(file.path, path);
 
-        const queryString = `INSERT INTO support.file (file_id, path, name, type, size, owner_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`
+        const queryString = `INSERT INTO support.attachement (attachement_id, path, name, type, size, owner_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`
         const { name, type, size } = file
 
-        await req.db.query(queryString, [ file_id, path, name, type, size, owner_id ])
+        await req.db.query(queryString, [ attachement_id, path, name, type, size, owner_id ])
         // const { rows: [ { created_at } ] } = await req.db.query(queryString, [ file_id, path, name, type, size, owner_id ])
 
-        return { file_id, name }
+        return { id: attachement_id, name }
       }))
 
       res.status(200).json(result)
@@ -93,17 +92,17 @@ app.get('/', async (req, res) => {
   if (!req.query.id) {
     return res.status(400).send('Malformed Query: id query parameter is required') // TODO: send propper error code (bad request)
   }
-  // if user is file admin, do not check ownership
-  // const queryString = getRoles(req).some(role => FILE_ADMIN_ROLES.includes(role))
-  //     ? `SELECT * FROM support.file WHERE file_id = $1`
-  //     : `SELECT * FROM support.file WHERE file_id = $1 AND owner_id = $2`
-  //
-  // const { rows: [ file ] } = await db.query(queryString, [ req.query.id, getAccountId(req) ])
-  
-  // temporary permission bypass
-  const queryString = `SELECT * FROM support.file WHERE file_id = $1`
 
-  const { rows: [ file ] } = await req.db.query(queryString, [ req.query.id ])
+  // if user is file admin, do not check ownership
+  const isFileAdmin = getRoles(req).some(role => FILE_ADMIN_ROLES.includes(role))
+  const queryString = isFileAdmin
+    ? `SELECT * FROM support.attachement WHERE attachement_id = $1`
+    : `SELECT * FROM support.attachement WHERE attachement_id = $1 AND owner_id = $2`
+  const parameters = isFileAdmin
+    ? [ req.query.id ]
+    : [ req.query.id, isFileAdmin ? null : getAccountId(req) ]
+
+  const { rows: [ file ] } = await req.db.query(queryString, parameters)
 
   if (!file) {
     return res.status(404).send(`File Not Found: Could not find file ${req.query.id}`) // TODO: send propper error code (bad request)

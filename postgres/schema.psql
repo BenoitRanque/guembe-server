@@ -284,8 +284,8 @@ CREATE TRIGGER support_ticket_assignation_set_created_at BEFORE INSERT ON suppor
 CREATE TRIGGER support_ticket_assignation_set_updated_at BEFORE UPDATE ON support.ticket_assignation
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TABLE support.file (
-    file_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE support.attachement (
+    attachement_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     path TEXT NOT NULL,
     name TEXT NOT NULL,
     type TEXT NOT null,
@@ -296,9 +296,9 @@ CREATE TABLE support.file (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_file_set_created_at BEFORE INSERT ON support.file
+CREATE TRIGGER support_attachement_set_created_at BEFORE INSERT ON support.attachement
     FOR EACH ROW EXECUTE FUNCTION set_created_at();
-CREATE TRIGGER support_file_set_updated_at BEFORE UPDATE ON support.file
+CREATE TRIGGER support_attachement_set_updated_at BEFORE UPDATE ON support.attachement
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- CREATE VIEW support.ticket_thread AS
