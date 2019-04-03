@@ -28,7 +28,7 @@ services:
     volumes:
       - ./pgadmin:/var/lib/pgadmin
   graphql-engine:
-    image: hasura/graphql-engine:v1.0.0-alpha39
+    image: hasura/graphql-engine:v1.0.0-alpha41
     ports:
       - "4000:8080"
     depends_on:
