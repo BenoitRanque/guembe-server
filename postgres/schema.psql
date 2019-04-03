@@ -422,9 +422,9 @@ CREATE TABLE admittance.bracelet (
     UNIQUE (series_name, serial)
 );
 
-CREATE TRIGGER admittance_admittance_set_created_at BEFORE INSERT ON admittance.bracelet
+CREATE TRIGGER admittance_bracelet_set_created_at BEFORE INSERT ON admittance.bracelet
     FOR EACH ROW EXECUTE FUNCTION set_created_at();
-CREATE TRIGGER admittance_admittance_set_updated_at BEFORE UPDATE ON admittance.bracelet
+CREATE TRIGGER admittance_bracelet_set_updated_at BEFORE UPDATE ON admittance.bracelet
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE admittance.checkpoint (
