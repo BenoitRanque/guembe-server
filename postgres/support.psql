@@ -61,14 +61,13 @@ CREATE TABLE support.ticket (
     priority_name TEXT DEFAULT 'MEDIUM' NOT NULL REFERENCES support.priority (priority_name)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_ticket_set_created_at BEFORE INSERT ON support.ticket
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_ticket_set_updated_at BEFORE UPDATE ON support.ticket
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -88,14 +87,13 @@ CREATE TABLE support.ticket_entry (
         ON UPDATE CASCADE
         ON DELETE CASCADE,
     body TEXT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_ticket_entry_set_created_at BEFORE INSERT ON support.ticket_entry
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_ticket_entry_set_updated_at BEFORE UPDATE ON support.ticket_entry
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -107,14 +105,13 @@ CREATE TABLE support.ticket_status (
     status_name TEXT REFERENCES support.status (status_name)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_ticket_status_set_created_at BEFORE INSERT ON support.ticket_status
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_ticket_status_set_updated_at BEFORE UPDATE ON support.ticket_status
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 -- update ticket status
@@ -138,14 +135,13 @@ CREATE TABLE support.ticket_priority (
     priority_name TEXT NOT NULL REFERENCES support.priority (priority_name)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_ticket_priority_set_created_at BEFORE INSERT ON support.ticket_priority
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_ticket_priority_set_updated_at BEFORE UPDATE ON support.ticket_priority
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 -- update ticket priority
@@ -169,14 +165,13 @@ CREATE TABLE support.ticket_assignation (
     assignee_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_ticket_assignation_set_created_at BEFORE INSERT ON support.ticket_assignation
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_ticket_assignation_set_updated_at BEFORE UPDATE ON support.ticket_assignation
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -186,14 +181,13 @@ CREATE TABLE support.attachement (
     name TEXT NOT NULL,
     type TEXT NOT null,
     size BIGINT NOT NULL,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
-CREATE TRIGGER support_attachement_set_created_at BEFORE INSERT ON support.attachement
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
+
 CREATE TRIGGER support_attachement_set_updated_at BEFORE UPDATE ON support.attachement
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 

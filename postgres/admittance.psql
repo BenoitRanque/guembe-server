@@ -5,15 +5,13 @@ CREATE TABLE admittance.series (
     series_name TEXT PRIMARY KEY,
     description TEXT NOT NULL,
     color TEXT NOT NULL,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER admittance_series_set_created_at BEFORE INSERT ON admittance.series
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER admittance_series_set_updated_at BEFORE UPDATE ON admittance.series
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -23,7 +21,7 @@ CREATE TABLE admittance.bracelet (
         ON UPDATE RESTRICT
         ON DELETE RESTRICT,
     serial BIGINT NOT NULL CHECK (serial > 0),
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -31,8 +29,6 @@ CREATE TABLE admittance.bracelet (
     UNIQUE (series_name, serial)
 );
 
-CREATE TRIGGER admittance_bracelet_set_created_at BEFORE INSERT ON admittance.bracelet
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER admittance_bracelet_set_updated_at BEFORE UPDATE ON admittance.bracelet
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -46,15 +42,13 @@ CREATE TABLE admittance.product (
     product_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_name TEXT UNIQUE NOT NULL,
     description TEXT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER admittance_product_set_created_at BEFORE INSERT ON admittance.product
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER admittance_product_set_updated_at BEFORE UPDATE ON admittance.product
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -75,7 +69,7 @@ CREATE TABLE admittance.assignation (
         ON DELETE RESTRICT,
     valid_from TIMESTAMP WITH TIME ZONE NOT NULL,
     valid_to TIMESTAMP WITH TIME ZONE NOT NULL,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -83,8 +77,6 @@ CREATE TABLE admittance.assignation (
     CHECK (valid_from < valid_to)
 );
 
-CREATE TRIGGER admittance_assignation_set_created_at BEFORE INSERT ON admittance.assignation
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER admittance_assignation_set_updated_at BEFORE UPDATE ON admittance.assignation
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -94,7 +86,7 @@ CREATE TABLE admittance.assignation_cancelation (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     description TEXT,
-    owner_id UUID NOT NULL REFERENCES auth.account (account_id)
+    owner_account_id UUID NOT NULL REFERENCES auth.account (account_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -124,8 +116,6 @@ CREATE TABLE admittance.activation (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER admittance_activation_set_created_at BEFORE INSERT ON admittance.activation
-    FOR EACH ROW EXECUTE FUNCTION set_created_at();
 CREATE TRIGGER admittance_activation_set_updated_at BEFORE UPDATE ON admittance.activation
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
