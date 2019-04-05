@@ -1,0 +1,84 @@
+
+-- This trigger function will set the updated_at value if an update changes any values
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF row(NEW.*) IS DISTINCT FROM row(OLD.*) THEN
+        NEW.updated_at = now();
+        RETURN NEW;
+    ELSE
+        RETURN OLD;
+    END IF;
+END;
+$$ language 'plpgsql';
+
+-- uage example
+-- CREATE TRIGGER auth_account_set_updated_at BEFORE UPDATE ON auth.account
+--     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+create schema auth;
+
+-- Password Hashing trigger Function
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE OR REPLACE FUNCTION auth.hash_password()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.password IS NOT NULL THEN
+        NEW.password = crypt(NEW.password, gen_salt('bf'));
+    END IF;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TABLE auth.account (
+    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+CREATE TRIGGER auth_account_hash_password BEFORE INSERT OR UPDATE ON auth.account
+    FOR EACH ROW EXECUTE FUNCTION auth.hash_password();
+
+CREATE TRIGGER auth_account_set_updated_at BEFORE UPDATE ON auth.account
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+
+CREATE TABLE auth.role (
+    role_name TEXT PRIMARY KEY,
+    description TEXT
+);
+CREATE TABLE auth.account_role (
+    account_id UUID REFERENCES auth.account (account_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    role_name TEXT REFERENCES auth.role (role_name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    PRIMARY KEY (account_id, role_name)
+);
+
+
+WITH administrator_account AS (
+    INSERT INTO auth.account
+        (username, password)
+    VALUES
+        ('admin', 'admin')
+    RETURNING account_id
+), auth_roles AS (
+    INSERT INTO auth.role
+        (role_name, description)
+    VALUES
+        ('admin', 'Usuario administrador maximo. No utilizar en productivo'),
+        ('support-client', 'Usuario de sopport. Puede crear tickets, ver y responder a tickets creados por si mismo, y cerrar o reabrir dichos tickets'),
+        ('support-technician', 'Usuario de sopporte. Puede ver, editar, responder, y cerrar todos los tickets. Recibe notificacion cuando se le asigna un ticket.'),
+        ('support-manager', 'Usuario de sopporte. Puede asignar tickets a usuarios.'),
+        ('support-supervisor', 'Usuario de sopporte. Puede leer todos los tickets.')
+    RETURNING role_name
+)
+INSERT INTO auth.account_role
+    (account_id, role_name)
+SELECT
+    account_id, role_name
+FROM administrator_account CROSS JOIN auth_roles;
+

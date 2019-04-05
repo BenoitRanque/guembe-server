@@ -1,0 +1,1 @@
+TODO: add here a few reminder re: hasura cli usage
