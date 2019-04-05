@@ -1,0 +1,40 @@
+- args:
+    name: account_roles
+    table:
+      name: account
+      schema: auth
+    using:
+      foreign_key_constraint_on:
+        column: account_id
+        table:
+          name: account_role
+          schema: auth
+  type: create_array_relationship
+- args:
+    name: account
+    table:
+      name: account_role
+      schema: auth
+    using:
+      foreign_key_constraint_on: account_id
+  type: create_object_relationship
+- args:
+    name: role
+    table:
+      name: account_role
+      schema: auth
+    using:
+      foreign_key_constraint_on: role_name
+  type: create_object_relationship
+- args:
+    name: account_roles
+    table:
+      name: role
+      schema: auth
+    using:
+      foreign_key_constraint_on:
+        column: role_name
+        table:
+          name: account_role
+          schema: auth
+  type: create_array_relationship

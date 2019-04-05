@@ -1,0 +1,45 @@
+- args:
+    table:
+      name: activation
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: assignation
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: assignation_cancelation
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: assignation_product
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: bracelet
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: checkpoint
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: product
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: product_checkpoint
+      schema: admittance
+  type: untrack_table
+- args:
+    table:
+      name: series
+      schema: admittance
+  type: untrack_table

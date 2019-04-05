@@ -1,0 +1,138 @@
+- args:
+    relationship: bracelet
+    table:
+      name: activation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: checkpoint
+    table:
+      name: activation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: bracelet
+    table:
+      name: assignation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: assignation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignation_cancelations
+    table:
+      name: assignation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignation_products
+    table:
+      name: assignation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignation
+    table:
+      name: assignation_cancelation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: assignation_cancelation
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignation
+    table:
+      name: assignation_product
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: product
+    table:
+      name: assignation_product
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: bracelet
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: series
+    table:
+      name: bracelet
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: activations
+    table:
+      name: bracelet
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignations
+    table:
+      name: bracelet
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: activations
+    table:
+      name: checkpoint
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: product_checkpoints
+    table:
+      name: checkpoint
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: product
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: assignation_products
+    table:
+      name: product
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: product_checkpoints
+    table:
+      name: product
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: checkpoint
+    table:
+      name: product_checkpoint
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: product
+    table:
+      name: product_checkpoint
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: series
+      schema: admittance
+  type: drop_relationship
+- args:
+    relationship: bracelets
+    table:
+      name: series
+      schema: admittance
+  type: drop_relationship

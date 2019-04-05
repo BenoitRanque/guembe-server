@@ -1,0 +1,220 @@
+- args:
+    name: bracelet
+    table:
+      name: activation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: bracelet_id
+  type: create_object_relationship
+- args:
+    name: checkpoint
+    table:
+      name: activation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: checkpoint_id
+  type: create_object_relationship
+- args:
+    name: bracelet
+    table:
+      name: assignation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: bracelet_id
+  type: create_object_relationship
+- args:
+    name: account
+    table:
+      name: assignation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: owner_account_id
+  type: create_object_relationship
+- args:
+    name: assignation_cancelations
+    table:
+      name: assignation
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: assignation_id
+        table:
+          name: assignation_cancelation
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: assignation_products
+    table:
+      name: assignation
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: assignation_id
+        table:
+          name: assignation_product
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: assignation
+    table:
+      name: assignation_cancelation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: assignation_id
+  type: create_object_relationship
+- args:
+    name: account
+    table:
+      name: assignation_cancelation
+      schema: admittance
+    using:
+      foreign_key_constraint_on: owner_account_id
+  type: create_object_relationship
+- args:
+    name: assignation
+    table:
+      name: assignation_product
+      schema: admittance
+    using:
+      foreign_key_constraint_on: assignation_id
+  type: create_object_relationship
+- args:
+    name: product
+    table:
+      name: assignation_product
+      schema: admittance
+    using:
+      foreign_key_constraint_on: product_id
+  type: create_object_relationship
+- args:
+    name: account
+    table:
+      name: bracelet
+      schema: admittance
+    using:
+      foreign_key_constraint_on: owner_account_id
+  type: create_object_relationship
+- args:
+    name: series
+    table:
+      name: bracelet
+      schema: admittance
+    using:
+      foreign_key_constraint_on: series_name
+  type: create_object_relationship
+- args:
+    name: activations
+    table:
+      name: bracelet
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: bracelet_id
+        table:
+          name: activation
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: assignations
+    table:
+      name: bracelet
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: bracelet_id
+        table:
+          name: assignation
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: activations
+    table:
+      name: checkpoint
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: checkpoint_id
+        table:
+          name: activation
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: product_checkpoints
+    table:
+      name: checkpoint
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: checkpoint_id
+        table:
+          name: product_checkpoint
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: account
+    table:
+      name: product
+      schema: admittance
+    using:
+      foreign_key_constraint_on: owner_account_id
+  type: create_object_relationship
+- args:
+    name: assignation_products
+    table:
+      name: product
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: product_id
+        table:
+          name: assignation_product
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: product_checkpoints
+    table:
+      name: product
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: product_id
+        table:
+          name: product_checkpoint
+          schema: admittance
+  type: create_array_relationship
+- args:
+    name: checkpoint
+    table:
+      name: product_checkpoint
+      schema: admittance
+    using:
+      foreign_key_constraint_on: checkpoint_id
+  type: create_object_relationship
+- args:
+    name: product
+    table:
+      name: product_checkpoint
+      schema: admittance
+    using:
+      foreign_key_constraint_on: product_id
+  type: create_object_relationship
+- args:
+    name: account
+    table:
+      name: series
+      schema: admittance
+    using:
+      foreign_key_constraint_on: owner_account_id
+  type: create_object_relationship
+- args:
+    name: bracelets
+    table:
+      name: series
+      schema: admittance
+    using:
+      foreign_key_constraint_on:
+        column: series_name
+        table:
+          name: bracelet
+          schema: admittance
+  type: create_array_relationship

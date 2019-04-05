@@ -1,0 +1,3 @@
+- args:
+    name: business-logic
+  type: remove_remote_schema

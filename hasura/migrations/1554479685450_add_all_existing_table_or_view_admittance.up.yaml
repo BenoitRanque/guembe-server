@@ -1,0 +1,36 @@
+- args:
+    name: activation
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: assignation
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: assignation_cancelation
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: assignation_product
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: bracelet
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: checkpoint
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: product
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: product_checkpoint
+    schema: admittance
+  type: add_existing_table_or_view
+- args:
+    name: series
+    schema: admittance
+  type: add_existing_table_or_view

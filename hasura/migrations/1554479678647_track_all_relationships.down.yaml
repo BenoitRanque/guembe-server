@@ -1,0 +1,24 @@
+- args:
+    relationship: account_roles
+    table:
+      name: account
+      schema: auth
+  type: drop_relationship
+- args:
+    relationship: account
+    table:
+      name: account_role
+      schema: auth
+  type: drop_relationship
+- args:
+    relationship: role
+    table:
+      name: account_role
+      schema: auth
+  type: drop_relationship
+- args:
+    relationship: account_roles
+    table:
+      name: role
+      schema: auth
+  type: drop_relationship

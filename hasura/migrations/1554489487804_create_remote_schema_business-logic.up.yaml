@@ -1,0 +1,7 @@
+- args:
+    definition:
+      forward_client_headers: true
+      headers: []
+      url: http://business-logic:3000/graphql
+    name: business-logic
+  type: add_remote_schema

@@ -1,0 +1,12 @@
+- args:
+    name: account
+    schema: auth
+  type: add_existing_table_or_view
+- args:
+    name: account_role
+    schema: auth
+  type: add_existing_table_or_view
+- args:
+    name: role
+    schema: auth
+  type: add_existing_table_or_view
