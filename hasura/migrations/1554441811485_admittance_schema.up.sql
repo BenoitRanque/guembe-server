@@ -1,3 +1,4 @@
+BEGIN;
 
 create schema admittance;
 
@@ -168,3 +169,5 @@ CREATE TRIGGER admittance_verify_activation_validation BEFORE INSERT ON admittan
     -- END LOOP;
 
 -- END; $$
+
+COMMIT;

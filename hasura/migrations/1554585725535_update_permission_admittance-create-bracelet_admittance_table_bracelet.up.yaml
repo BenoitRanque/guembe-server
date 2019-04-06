@@ -1,0 +1,14 @@
+- args:
+    permission:
+      allow_upsert: true
+      check: {}
+      columns:
+      - serial
+      - series_name
+      set:
+        owner_account_id: x-hasura-account-id
+    role: admittance-create-bracelet
+    table:
+      name: bracelet
+      schema: admittance
+  type: create_insert_permission

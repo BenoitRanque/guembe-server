@@ -1,3 +1,4 @@
+BEGIN;
 
 create schema support;
 
@@ -191,3 +192,4 @@ CREATE TABLE support.attachement (
 CREATE TRIGGER support_attachement_set_updated_at BEFORE UPDATE ON support.attachement
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+COMMIT;

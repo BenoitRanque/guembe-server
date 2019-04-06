@@ -1,4 +1,4 @@
-
+BEGIN;
 -- This trigger function will set the updated_at value if an update changes any values
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
@@ -82,3 +82,4 @@ SELECT
     account_id, role_name
 FROM administrator_account CROSS JOIN auth_roles;
 
+COMMIT;

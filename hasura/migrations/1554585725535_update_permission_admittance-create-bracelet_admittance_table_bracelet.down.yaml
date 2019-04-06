@@ -1,0 +1,6 @@
+- args:
+    role: admittance-create-bracelet
+    table:
+      name: bracelet
+      schema: admittance
+  type: drop_insert_permission
