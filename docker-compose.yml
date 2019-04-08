@@ -1,6 +1,14 @@
 # production configuration. See docker-compose.override.yml from development specific configurations
 version: '3.6'
 services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: on-failure
+    volumes:
+      - ./nginx/html:/usr/share/nginx/html:ro
   postgres:
     image: postgres:11-alpine
     restart: always
@@ -66,3 +74,5 @@ services:
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
     depends_on:
       - postgres
+    volumes:
+      - ./business-logic/files:/usr/app/files
