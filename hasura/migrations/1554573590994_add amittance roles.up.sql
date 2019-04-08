@@ -7,7 +7,8 @@ WITH administrator_account AS (
     INSERT INTO auth.role
         (role_name, description)
     VALUES
-        ('admittance-create-bracelet', 'Crear Manillas')
+        ('admittance-create-bracelet', 'Crear Manillas'),
+        ('admittance-create-series', 'Crear Series')
     RETURNING role_name
 )
 INSERT INTO auth.account_role

@@ -1,0 +1,6 @@
+- args:
+    role: admittance-create-series
+    table:
+      name: series
+      schema: admittance
+  type: drop_insert_permission

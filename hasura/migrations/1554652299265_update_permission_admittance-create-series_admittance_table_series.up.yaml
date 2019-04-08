@@ -1,0 +1,15 @@
+- args:
+    permission:
+      allow_upsert: true
+      check: {}
+      columns:
+      - color
+      - description
+      - series_name
+      set:
+        owner_account_id: x-hasura-account-id
+    role: admittance-create-series
+    table:
+      name: series
+      schema: admittance
+  type: create_insert_permission
